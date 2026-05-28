@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-SOAR Cyber Security Command Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans min-h-screen">
+
+    <nav class="bg-gray-900 border-b border-gray-800 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <span class="text-2xl">🤖</span>
+            <h1 class="text-xl font-bold tracking-wider text-red-500">AI-SOAR COMMAND CENTER</h1>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="h-3 w-3 bg-green-500 rounded-full animate-pulse"></span>
+            <span class="text-sm text-gray-400 font-mono">SYSTEM STATUS: ACTIVE</span>
+        </div>
+    </nav>
+
+    <div class="p-6 max-w-7xl mx-auto -mb-6">
+        <div class="bg-gray-900 border border-red-900/30 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div>
+                <h4 class="text-sm font-bold text-red-400 tracking-wider font-mono">⚠️ SOAR THREAT SIMULATION PANEL</h4>
+                <p class="text-xs text-gray-400">Launch a simulated attack vector to test the system's autonomous AI detection and containment capabilities.</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="/trigger/normal/" class="bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 px-4 py-2 rounded-lg text-xs font-bold transition">Simulate Normal Traffic</a>
+                <a href="/trigger/ddos/" class="bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-800/60 px-4 py-2 rounded-lg text-xs font-bold transition">🔥 Trigger DDoS Attack</a>
+                <a href="/trigger/brute_force/" class="bg-orange-950/40 hover:bg-orange-900/60 text-orange-400 border border-orange-800/60 px-4 py-2 rounded-lg text-xs font-bold transition">💥 Trigger Brute Force</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6 max-w-7xl mx-auto space-y-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl shadow-lg">
+                <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider">Total Traffic Logs</p>
+                <h3 class="text-4xl font-bold mt-2 font-mono text-blue-400">{{ total_logs }}</h3>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl shadow-lg">
+                <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider">AI Detected Anomalies</p>
+                <h3 class="text-4xl font-bold mt-2 font-mono text-red-500">{{ total_anomalies }}</h3>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-xl shadow-lg">
+                <p class="text-gray-400 text-sm font-semibold uppercase tracking-wider">SOAR Autonomous Fixes</p>
+                <h3 class="text-4xl font-bold mt-2 font-mono text-green-400">{{ total_mitigations }}</h3>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wide mb-4">Traffic Composition (Normal vs Attack)</h3>
+                <div class="h-64 flex justify-center">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-lg">
+                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wide mb-4">Attack Vectors Distribution</h3>
+                <div class="h-64 flex justify-center">
+                    <canvas id="attackChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-800 bg-gray-900/50 flex justify-between items-center">
+                <h2 class="text-lg font-bold tracking-wide">Live Threat Stream Log</h2>
+                <button onclick="window.location.reload();" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition">🔄 Refresh Stream</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-950/50 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800">
+                            <th class="px-6 py-4">Timestamp</th>
+                            <th class="px-6 py-4">Source IP</th>
+                            <th class="px-6 py-4">Attack Vector</th>
+                            <th class="px-6 py-4">Status</th>
+                            <th class="px-6 py-4">SOAR Action Executed</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-800 text-sm font-mono">
+                        {% for alert in alerts %}
+                        <tr class="hover:bg-gray-850/50 transition">
+                            <td class="px-6 py-4 text-gray-400 text-xs">{{ alert.timestamp|date:"Y-m-d H:i:s" }}</td>
+                            <td class="px-6 py-4 font-bold text-gray-300">{{ alert.source_ip }}</td>
+                            <td class="px-6 py-4">
+                                {% if alert.is_anomaly %}
+                                    <span class="text-red-400 font-semibold">{{ alert.attack_type }}</span>
+                                {% else %}
+                                    <span class="text-gray-500">Normal Traffic</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if alert.is_anomaly %}
+                                    <span class="bg-red-950/50 border border-red-800 text-red-400 px-2 py-0.5 rounded text-xs">🚨 REJECTED</span>
+                                {% else %}
+                                    <span class="bg-green-950/50 border border-green-800 text-green-400 px-2 py-0.5 rounded text-xs">🟢 ALLOWED</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-xs">
+                                {% if alert.is_anomaly %}
+                                    <span class="text-green-400 font-semibold">{{ alert.action_taken }}</span>
+                                {% else %}
+                                    <span class="text-gray-500">{{ alert.action_taken }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500 italic">No network traffic captures found in database.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pie Chart: Normal vs Anomalous Traffic
+        const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
+        new Chart(ctxTraffic, {
+            type: 'pie',
+            data: {
+                labels: ['Normal Logs', 'Anomalies (Threats)'],
+                datasets: [{
+                    data: [{{ total_logs }} - {{ total_anomalies }}, {{ total_anomalies }}],
+                    backgroundColor: ['#3b82f6', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Bar Chart: Attack Breakdown
+        const ctxAttack = document.getElementById('attackChart').getContext('2d');
+        new Chart(ctxAttack, {
+            type: 'bar',
+            data: {
+                labels: ['DDoS Attacks', 'Brute Force'],
+                datasets: [{
+                    label: 'Incidents Blocked',
+                    data: [{{ total_ddos }}, {{ total_brute_force }}],
+                    backgroundColor: ['#b91c1c', '#ea580c'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } },
+                    x: { ticks: { color: '#9ca3af' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
